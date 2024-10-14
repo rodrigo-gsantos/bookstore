@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore</title>
+    <link rel="stylesheet" type="text/css" href="/css/styles.css"> <!-- Link to your CSS -->
+</head>
+<body>
+    <div id="container"> <!-- Added container div -->
+        <h1>Bookstore</h1>
+        <form id="addBookForm" action="/books" method="post">
+            <input type="text" name="Title" placeholder="Title" required>
+            <input type="text" name="Author" placeholder="Author" required>
+            <input type="number" name="Pages" placeholder="Pages" required>
+            <button type="submit">Add Book</button>
+        </form>
+        <ul id="bookList">
+            {{range .}}
+            <li>
+                <span>{{.Title}} by {{.Author}} - {{.Pages}} pages</span>
+                <div class="btn-group">
+                    <button onclick="deleteBook({{.ID}})">Delete</button>
+                    <button onclick="editBook({{.ID}}, '{{.Title}}', '{{.Author}}', {{.Pages}})">Edit</button>
+                </div>
+            </li>
+            {{end}}
+        </ul>
+    </div>
+    
+    <!-- Edit Book Modal -->
+    <div id="editBookModal" style="display:none;">
+        <h2>Edit Book</h2>
+        <form id="editBookForm" onsubmit="submitEdit(event)">
+            <input type="hidden" id="editBookId" name="ID">
+            <input type="text" id="editBookTitle" name="Title" placeholder="Title" required>
+            <input type="text" id="editBookAuthor" name="Author" placeholder="Author" required>
+            <input type="number" id="editBookPages" name="Pages" placeholder="Pages" required>
+            <button type="submit">Update Book</button>
+        </form>
+    </div>
+
+    <script>
+        function editBook(id, title, author, pages) {
+            document.getElementById('editBookId').value = id;
+            document.getElementById('editBookTitle').value = title;
+            document.getElementById('editBookAuthor').value = author;
+            document.getElementById('editBookPages').value = pages;
+
+            document.getElementById('editBookModal').style.display = 'block';
+            document.getElementById('modalOverlay').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('editBookModal').style.display = 'none';
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        function submitEdit(event) {
+            event.preventDefault();
+            const id = document.getElementById('editBookId').value;
+            const title = document.getElementById('editBookTitle').value;
+            const author = document.getElementById('editBookAuthor').value;
+            const pages = parseInt(document.getElementById('editBookPages').value, 10);
+
+            if (isNaN(pages)) {
+                alert("Invalid number of pages");
+                return;
+            }
+
+            fetch(`/books/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id: parseInt(id, 10), title, author, pages })
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    response.text().then(text => {
+                        alert('Failed to update book: ' + text);
+                    });
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteBook(id) {
+            fetch(`/books/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete book');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Close modal on overlay click
+        document.getElementById('modalOverlay').addEventListener('click', closeModal);
+    </script>
+</body>
+</html>
