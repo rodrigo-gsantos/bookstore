@@ -1,0 +1,50 @@
+<!-- addBook.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookstore - Add Book</title>
+    <link rel="stylesheet" type="text/css" href="/css/addBook.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Add a New Book</h1>
+        <form id="addBookForm" action="/books" method="post">
+            <input type="text" name="Title" placeholder="Title" required>
+            <input type="text" name="Author" placeholder="Author" required>
+            <input type="number" name="Pages" placeholder="Pages" required>
+            <button type="submit">Add Book</button>
+        </form>
+        
+        <div id="successMessage" style="display: none;">
+            <p>Book added successfully!</p>
+            <button onclick="goToLibrary()">Go to Library</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("addBookForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent form submission
+            
+            fetch('/books', {
+                method: 'POST',
+                body: new FormData(this)
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('addBookForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    alert('Failed to add book');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        function goToLibrary() {
+            window.location.href = '/library'; // Redirect to library page
+        }
+    </script>
+</body>
+</html>

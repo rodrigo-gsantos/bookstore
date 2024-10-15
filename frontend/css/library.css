@@ -1,0 +1,105 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e3f2fd; /* Light blue background */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Start items from the top */
+    height: 100vh; /* Full height of the viewport */
+    padding-top: 20px; /* Add some top padding */
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 600px; /* Wider container to accommodate book list */
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-height: 80vh; /* Limit height */
+    overflow-y: auto; /* Allow vertical scroll */
+}
+
+h1 {
+    color: #333;
+    text-align: center;
+}
+
+#bookList {
+    list-style-type: none;
+    padding: 0;
+    width: 100%; /* Full width */
+    margin-top: 20px;
+}
+
+#bookList li {
+    background: white;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#bookList li span {
+    flex-grow: 1;
+    margin-right: 20px;
+    text-align: left;
+}
+
+.btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff; /* Primary blue */
+    color: white;
+    cursor: pointer;
+    min-width: 80px; /* Uniform button size */
+}
+
+button:hover {
+    background-color: #0056b3; /* Darker blue */
+}
+
+.btn-danger {
+    background-color: #17a2b8; /* Light blue for delete button */
+}
+
+.btn-danger:hover {
+    background-color: #138496; /* Darker blue for delete button hover */
+}
+
+/* Modal styles */
+#editBookModal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3); /* Blue shadow */
+    display: none;
+    z-index: 1000;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 123, 255, 0.2); /* Blueish overlay */
+    display: none;
+    z-index: 999;
+}

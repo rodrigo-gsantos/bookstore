@@ -2,7 +2,7 @@ package main
 
 import (
     "database/sql"
-    "html/template"
+	"text/template"
     "log"
     "net/http"
 
@@ -23,34 +23,41 @@ func main() {
     // Serve static files from the frontend directory
     http.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("frontend/css"))))
 
-    http.HandleFunc("/", homeHandler)               // Handle GET requests to the home page
+    // Home and Library handlers
+    http.HandleFunc("/", homeHandler) // Handle GET requests to the home page
+    http.HandleFunc("/library", libraryHandler) // Handle GET requests to the library page
     http.HandleFunc("/books", func(w http.ResponseWriter, r *http.Request) {
-        book.HandleBooks(w, r, database) // Pass the database connection
-    })     // Handle book-related requests
+        book.HandleBooks(w, r, database) // Delegate to the book handler
+    })
 	http.HandleFunc("/books/", func(w http.ResponseWriter, r *http.Request) {
-        book.HandleBooks(w, r, database) // Handle delete requests here too
+        book.HandleBooks(w, r, database) // Delegate to the book handler
     })
 
     log.Println("Starting server on :8080")
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// homeHandler serves the index.html template and fetches books from the database
+// homeHandler serves the addBook.html template without fetching books
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-    books, err := book.GetBooks(database) // Fetch books from the database
-    if err != nil {
-        http.Error(w, "Failed to get books", http.StatusInternalServerError)
-        return
-    }
-
-    tmpl, err := template.ParseFiles("frontend/templates/index.html") // Adjust path as necessary
+    tmpl, err := template.ParseFiles("frontend/templates/addBook.html") // Adjust path as necessary
     if err != nil {
         http.Error(w, "Failed to load template", http.StatusInternalServerError)
         return
     }
-
-    err = tmpl.Execute(w, books) // Pass the list of books to the template
+    err = tmpl.Execute(w, nil) // No data is passed to the template
     if err != nil {
         http.Error(w, "Failed to execute template", http.StatusInternalServerError)
     }
+}
+
+// libraryHandler serves the library.html template and fetches books from the database
+func libraryHandler(w http.ResponseWriter, r *http.Request) {
+    books, err := book.GetBooks(database) // Fetch all books from the database
+    if err != nil {
+        http.Error(w, "Unable to retrieve books", http.StatusInternalServerError)
+        return
+    }
+
+    tmpl := template.Must(template.ParseFiles("frontend/templates/library.html"))
+    tmpl.Execute(w, books) // Pass the list of books to the template
 }
