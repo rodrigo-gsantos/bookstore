@@ -7,6 +7,7 @@ import (
     "net/http"
 	"strconv"
 	"log"
+	"text/template"
 )
 
 // Book struct to represent a book entity
@@ -27,10 +28,35 @@ func AddBook(db *sql.DB, book Book) error {
     return nil
 }
 
-// GetBooks retrieves all books from the database
-func GetBooks(db *sql.DB) ([]Book, error) {
-    query := "SELECT id, title, author, pages FROM books"
-    rows, err := db.Query(query)
+func GetBooks(db *sql.DB, search string, sortBy string) ([]Book, error) {
+    var query string
+    var rows *sql.Rows
+    var err error
+
+    // If a search query is provided, filter the results
+    if search != "" {
+        query = "SELECT id, title, author, pages FROM books WHERE title LIKE ? OR author LIKE ?"
+        search = "%" + search + "%" // Prepare the search pattern
+        rows, err = db.Query(query, search, search)
+    } else {
+        // Construct the base query
+        query = "SELECT id, title, author, pages FROM books"
+
+        // Add sorting based on the sortBy parameter
+        switch sortBy {
+        case "title":
+            query += " ORDER BY title"
+        case "author":
+            query += " ORDER BY author"
+        case "pages":
+            query += " ORDER BY pages"
+        default:
+            query += " ORDER BY title" // Default sorting by title
+        }
+
+        rows, err = db.Query(query)
+    }
+
     if err != nil {
         return nil, fmt.Errorf("getBooks: %v", err)
     }
@@ -47,6 +73,7 @@ func GetBooks(db *sql.DB) ([]Book, error) {
 
     return books, nil
 }
+
 
 // UpdateBook updates an existing book in the database
 func UpdateBook(db *sql.DB, book Book) error {
@@ -73,20 +100,43 @@ func DeleteBook(db *sql.DB, id int) error {
 func HandleBooks(w http.ResponseWriter, r *http.Request, db *sql.DB) {
     switch r.Method {
     case "GET":
-        books, err := GetBooks(db)
+		log.Println("Received GET request")
+        sortBy := r.URL.Query().Get("sortBy")
+        search := r.URL.Query().Get("search")
+
+        log.Printf("SortBy: %s, Search: %s", sortBy, search)  // Log to verify the request parameters
+
+        books, err := GetBooks(db, search, sortBy)
         if err != nil {
+            // Log the error before returning it
+            log.Printf("Error fetching books: %v", err)
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-        jsonResponse, err := json.Marshal(books)
+
+        if r.Header.Get("X-Requested-With") == "XMLHttpRequest" {
+			// Handle AJAX request
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(books)  // Return the books as JSON
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+		
+
+        // Otherwise, render the books as HTML for normal page load
+        tmpl, err := template.ParseFiles("frontend/templates/library.html")
         if err != nil {
+            log.Printf("Error parsing template: %v", err)
             http.Error(w, err.Error(), http.StatusInternalServerError)
             return
         }
-        w.Header().Set("Content-Type", "application/json")
-        w.Write(jsonResponse)
+        tmpl.Execute(w, books)	
+
 
     case "POST":
+		log.Println("Received POST request")
         // Handle form submission
         title := r.FormValue("Title")
         author := r.FormValue("Author")

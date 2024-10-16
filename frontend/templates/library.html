@@ -9,8 +9,22 @@
 
 </head>
 <body>
+    <!-- Add this element to your HTML -->
+    <div id="modalOverlay" class="modal-overlay" style="display:none;"></div>
+
     <div class="container">
         <h1>Your Library</h1>
+
+        <!-- Sorting Dropdown -->
+        <div class="sort-container">
+            <label for="sortBy">Sort by:</label>
+            <select id="sortBy" onchange="sortBooks()">
+                <option value="title">Title</option>
+                <option value="author">Author</option>
+                <option value="pages">Number of Pages</option>
+            </select>
+        </div>
+
         <ul id="bookList">
             {{range .}}
             <li>
@@ -40,6 +54,41 @@
     </div>
 
     <script>
+        function sortBooks() {
+            const sortBy = document.getElementById('sortBy').value;
+
+            fetch(`/library?sortBy=${sortBy}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'  // Indicate this is an AJAX request
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();  // Expect a JSON response
+            })
+            .then(data => {
+                const bookList = document.getElementById('bookList');
+                bookList.innerHTML = '';  // Clear existing book list
+
+                // Loop through each book and create a new list item
+                data.forEach(book => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `${book.title} by ${book.author} - ${book.pages} pages
+                        <div class="btn-group">
+                            <button onclick="deleteBook(${book.id})" class="btn-danger">Delete</button>
+                            <button onclick="editBook(${book.id}, '${book.title}', '${book.author}', ${book.pages})" class="btn-edit">Edit</button>
+                        </div>`;
+                    bookList.appendChild(li);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+
+
+        
         function editBook(id, title, author, pages) {
             document.getElementById('editBookId').value = id;
             document.getElementById('editBookTitle').value = title;

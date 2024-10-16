@@ -25,7 +25,10 @@ func main() {
 
     // Home and Library handlers
     http.HandleFunc("/", homeHandler) // Handle GET requests to the home page
-    http.HandleFunc("/library", libraryHandler) // Handle GET requests to the library page
+    http.HandleFunc("/library", func(w http.ResponseWriter, r *http.Request) {
+		book.HandleBooks(w, r, database) // Delegate to the book handler for both AJAX and normal requests
+	})
+	
     http.HandleFunc("/books", func(w http.ResponseWriter, r *http.Request) {
         book.HandleBooks(w, r, database) // Delegate to the book handler
     })
@@ -52,7 +55,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 // libraryHandler serves the library.html template and fetches books from the database
 func libraryHandler(w http.ResponseWriter, r *http.Request) {
-    books, err := book.GetBooks(database) // Fetch all books from the database
+    books, err := book.GetBooks(database, "", "") // Fetch all books from the database
     if err != nil {
         http.Error(w, "Unable to retrieve books", http.StatusInternalServerError)
         return
